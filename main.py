@@ -48,39 +48,51 @@ uploaded_file = st.file_uploader(
     help="Make sure your CSV contains columns like: date, price, bedrooms, bathrooms, sqft_living, etc."
 )
 
+# 1. DATA LOADING PHASE
+df = None
+
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
-        st.session_state.df = df
-
-        # Display success message and data preview
         st.success("✅ File uploaded successfully!")
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Records", len(df))
-        with col2:
-            st.metric("Total Columns", len(df.columns))
-
-        # Show data preview
-        st.subheader("Data Preview")
-        st.dataframe(df.head(10))
-
-        # Show column information
-        st.subheader("Column Information")
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.write("**Column Names:**")
-            st.code("\n".join(df.columns.tolist()))
-
-        with col2:
-            st.write("**Data Types:**")
-            dtype_info = df.dtypes.astype(str).to_dict()
-            st.json(dtype_info)
-
     except Exception as e:
         st.error(f"❌ Error reading file: {str(e)}")
+else:
+    # Fallback to the default file
+    try:
+        df = pd.read_csv("./data/data.csv")
+        st.info("ℹ️ No file uploaded. Using the default house price dataset.")
+    except FileNotFoundError:
+        st.warning("⚠️ Awaiting file upload... (Default file not found on server)")
+
+# 2. DATA DISPLAY & STORAGE PHASE
+if df is not None:
+    # Save to session state so it persists across interactions
+    st.session_state.df = df
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Records", len(df))
+    with col2:
+        st.metric("Total Columns", len(df.columns))
+
+    # Show data preview
+    st.subheader("Data Preview")
+    st.dataframe(df.head(10))
+
+    # Show column information
+    st.subheader("Column Information")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write("**Column Names:**")
+        st.code("\n".join(df.columns.tolist()))
+
+    with col2:
+        st.write("**Data Types:**")
+        dtype_info = df.dtypes.astype(str).to_dict()
+        st.json(dtype_info)
+
 
 # Navigation info
 st.markdown("---")
